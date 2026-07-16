@@ -11,11 +11,12 @@ import {
   HeadingLevel,
   VerticalAlign,
   BorderStyle,
+  TableLayoutType,
 } from 'docx';
 import { saveAs } from 'file-saver';
 import type { LessonPlan, LessonStage } from '../types';
 import { computeScoringSummary } from './scoring';
-import { formatStageTasksText, formatStageRolesText } from './planFormat';
+import { formatStageTasksText, formatStageResourcesText } from './planFormat';
 
 const FONT = 'Times New Roman';
 
@@ -63,6 +64,25 @@ function sectionRow(label: string, value: string) {
   });
 }
 
+function tieredObjectivesRow(label: string, tiers: { all: string; most: string; some: string }) {
+  const cell = new TableCell({
+    width: { size: 70, type: WidthType.PERCENTAGE },
+    borders: cellBorder,
+    margins: { top: 80, bottom: 80, left: 100, right: 100 },
+    children: [
+      new Paragraph({ children: [new TextRun({ text: 'Барлық оқушылар үшін:', font: FONT, size: 20, bold: true })] }),
+      ...(tiers.all || '—').split('\n').map((l) => new Paragraph({ children: [new TextRun({ text: l, font: FONT, size: 20 })] })),
+      new Paragraph({ children: [new TextRun({ text: 'Көпшілік оқушылар үшін:', font: FONT, size: 20, bold: true })], spacing: { before: 100 } }),
+      ...(tiers.most || '—').split('\n').map((l) => new Paragraph({ children: [new TextRun({ text: l, font: FONT, size: 20 })] })),
+      new Paragraph({ children: [new TextRun({ text: 'Кейбір оқушылар үшін:', font: FONT, size: 20, bold: true })], spacing: { before: 100 } }),
+      ...(tiers.some || '—').split('\n').map((l) => new Paragraph({ children: [new TextRun({ text: l, font: FONT, size: 20 })] })),
+    ],
+  });
+  return new TableRow({
+    children: [textCell(label, { bold: true, width: 30, shaded: true }), cell],
+  });
+}
+
 function heading(text: string) {
   return new Paragraph({
     heading: HeadingLevel.HEADING_2,
@@ -75,43 +95,43 @@ function spacer() {
   return new Paragraph({ text: '', spacing: { after: 100 } });
 }
 
-function stageTable(label: string, stage: LessonStage, showRoles: boolean, showSen: boolean) {
+function stageTable(label: string, stage: LessonStage) {
   const headerCells = [
-    textCell('Кезең/Уақыты', { bold: true, width: 12, shaded: true }),
-    textCell('Мұғалім әрекеті (сценарий)', { bold: true, width: 30, shaded: true }),
-    textCell('Оқушы әрекеті', { bold: true, width: 20, shaded: true }),
-    textCell('Тапсырма / бағалау', { bold: true, width: showRoles ? 18 : 23, shaded: true }),
+    textCell('Кезең/Уақыты', { bold: true, width: 10, shaded: true }),
+    textCell('Мұғалім әрекеті (сценарий)', { bold: true, width: 28, shaded: true }),
+    textCell('Оқушы әрекеті', { bold: true, width: 18, shaded: true }),
+    textCell('Тапсырма / бағалау', { bold: true, width: 24, shaded: true }),
+    textCell('Ресурстар', { bold: true, width: 20, shaded: true }),
   ];
-  if (showRoles) headerCells.push(textCell('Рөлдер', { bold: true, width: 7, shaded: true }));
-  headerCells.push(textCell('Ресурстар', { bold: true, width: showSen ? 13 : 18, shaded: true }));
-  if (showSen) headerCells.push(textCell('ЕБҚ бейімделуі', { bold: true, width: 10, shaded: true }));
 
   const tasksText = formatStageTasksText(stage);
-  const rolesText = formatStageRolesText(stage);
+  const resourcesText = formatStageResourcesText(stage);
 
   const bodyCells = [
-    textCell(`${label}\n(${stage.time})`, { bold: true, width: 12 }),
-    textCell(stage.teacherScript, { width: 30 }),
-    textCell(stage.studentActions, { width: 20 }),
-    textCell(tasksText, { width: showRoles ? 18 : 23 }),
+    textCell(`${label}\n(${stage.time})`, { bold: true, width: 10 }),
+    textCell(stage.teacherScript, { width: 28 }),
+    textCell(stage.studentActions, { width: 18 }),
+    textCell(tasksText, { width: 24 }),
+    textCell(resourcesText, { width: 20 }),
   ];
-  if (showRoles) bodyCells.push(textCell(rolesText, { width: 7 }));
-  bodyCells.push(textCell(stage.resources, { width: showSen ? 13 : 18 }));
-  if (showSen) bodyCells.push(textCell(stage.specialNeedsNote || '', { width: 10 }));
 
   return { headerCells, bodyCells };
 }
 
 export async function exportToDocx(plan: LessonPlan) {
-  const showRoles = plan.workTypes.includes('Топтық жұмыс');
-  const showSen = plan.specialNeeds;
-
   const metaTable = new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
+    layout: TableLayoutType.FIXED,
     rows: [
       metaRow('Мектеп', plan.school || '—', 'Күні', plan.date || '—'),
       metaRow('Мұғалімнің аты-жөні', plan.teacher || '—', 'Сынып', plan.grade || '—'),
       metaRow('Пән', plan.subject || '—', 'Қатысқандар саны', plan.studentsCount || '—'),
+      new TableRow({
+        children: [
+          textCell('Қатыспағандар саны', { bold: true, width: 22, shaded: true }),
+          textCell(plan.absentCount || '—', { width: 78, columnSpan: 3 }),
+        ],
+      }),
       new TableRow({
         children: [
           textCell('Сабақтың тақырыбы', { bold: true, width: 22, shaded: true }),
@@ -123,9 +143,10 @@ export async function exportToDocx(plan: LessonPlan) {
 
   const sectionTable = new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
+    layout: TableLayoutType.FIXED,
     rows: [
       sectionRow('Осы сабақта қол жеткізілетін оқу мақсаттары', plan.learningObjectives),
-      sectionRow('Сабақ мақсаттары', plan.lessonObjectives),
+      tieredObjectivesRow('Сабақ мақсаттары', plan.lessonObjectives),
       sectionRow('Бағалау критерийлері', plan.assessmentCriteria),
       sectionRow('Тілдік мақсаттар', plan.languageObjectives),
       sectionRow('Құндылықтарды дарыту', plan.values),
@@ -135,12 +156,13 @@ export async function exportToDocx(plan: LessonPlan) {
     ],
   });
 
-  const beginRows = stageTable('Басы', plan.beginning, showRoles, showSen);
-  const midRows = stageTable('Ортасы', plan.middle, showRoles, showSen);
-  const endRows = stageTable(plan.formativeMode ? 'БЖБ' : 'Соңы', plan.end, showRoles, showSen);
+  const beginRows = stageTable('Басы', plan.beginning);
+  const midRows = stageTable('Ортасы', plan.middle);
+  const endRows = stageTable(plan.formativeMode ? 'БЖБ' : 'Соңы', plan.end);
 
   const stagesTable = new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
+    layout: TableLayoutType.FIXED,
     rows: [
       new TableRow({ tableHeader: true, children: beginRows.headerCells }),
       new TableRow({ children: beginRows.bodyCells }),
@@ -151,6 +173,7 @@ export async function exportToDocx(plan: LessonPlan) {
 
   const tailTable = new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
+    layout: TableLayoutType.FIXED,
     rows: [
       sectionRow('Саралау', plan.differentiation),
       sectionRow('Бағалау', plan.assessment),
@@ -180,6 +203,7 @@ export async function exportToDocx(plan: LessonPlan) {
     children.push(
       new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },
+    layout: TableLayoutType.FIXED,
         rows: [
           sectionRow('Тапсырма', plan.formativeAssessment.task),
           sectionRow('Критерийлер', plan.formativeAssessment.criteria),
@@ -195,6 +219,7 @@ export async function exportToDocx(plan: LessonPlan) {
     children.push(
       new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },
+    layout: TableLayoutType.FIXED,
         rows: [
           new TableRow({
             tableHeader: true,

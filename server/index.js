@@ -91,6 +91,7 @@ app.post('/api/generate', generateLimiter, async (req, res) => {
       subject: clean.subject,
       topic: clean.topic,
       studentsCount: clean.studentsCount,
+      absentCount: '',
       workTypes: clean.workTypes,
       specialNeeds: clean.specialNeeds,
       formativeMode: clean.formativeMode,

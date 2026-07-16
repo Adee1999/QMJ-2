@@ -34,6 +34,16 @@ export interface DifferentiatedTask {
   criterion?: string;     // бағалау критерийі (кейбір кезеңдерде болмайды)
   descriptor: string;     // дескриптор
   points?: number;        // балл (кейбір кезеңдерде «балл жоқ»)
+  imageHint?: string;     // AI сурет сала алмайды — осы жерде қандай сурет/сызба керегін сипаттайды,
+                          // тапсырма сол сипаттамамен бірге бос орын (плейсхолдер) ретінде көрсетіледі
+}
+
+// Ресми ҚМЖ үлгісіндегі үш деңгейлі мақсат құрылымы
+// («Барлық/Көпшілік/Кейбір оқушылар үшін»)
+export interface TieredObjectives {
+  all: string;    // Барлық оқушылар үшін
+  most: string;   // Көпшілік оқушылар үшін
+  some: string;   // Кейбір оқушылар үшін
 }
 
 export interface LessonStage {
@@ -73,13 +83,14 @@ export interface LessonPlan {
   subject: string;
   topic: string;
   studentsCount: string;
+  absentCount: string;          // Қатыспағандар саны — әрқашан бос, сабақ күні қолмен толтырылады
   workTypes: WorkType[];
   specialNeeds: boolean;
   formativeMode: boolean;
 
   // AI генерациялайтын педагогикалық мазмұн
   learningObjectives: string;
-  lessonObjectives: string;
+  lessonObjectives: TieredObjectives;   // ресми үлгі: Барлық/Көпшілік/Кейбір оқушылар үшін
   assessmentCriteria: string;
   languageObjectives: string;
   values: string;

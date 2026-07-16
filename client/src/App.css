@@ -655,6 +655,66 @@
 .section-table .section-label {
   width: 30%;
 }
+
+/* ---------- Үш деңгейлі сабақ мақсаты (Барлық/Көпшілік/Кейбір оқушылар үшін) ---------- */
+.tiered-objectives {
+  padding: var(--sp-1) !important;
+}
+.tier-row {
+  padding: 6px 8px;
+}
+.tier-row + .tier-row {
+  border-top: 1px dashed var(--rule-line);
+}
+.tier-label {
+  display: block;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-bottom: 3px;
+}
+
+/* ---------- Сурет орны (AI сурет сала алмайды — тек орын/сипаттама қалдырады) ---------- */
+.image-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1.5px dashed var(--rule-line);
+  border-radius: var(--r-sm);
+  background: var(--doc-shade);
+}
+.image-placeholder-icon {
+  font-size: var(--fs-base);
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+.image-placeholder-input {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  font-size: var(--fs-sm) !important;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+.image-placeholder-add {
+  margin-top: 6px;
+  padding: 4px 10px;
+  border: 1px dashed var(--rule-line);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+.image-placeholder-add:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .stage-table th {
   background: var(--doc-shade);
   font-weight: 700;

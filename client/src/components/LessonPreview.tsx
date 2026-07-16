@@ -87,7 +87,29 @@ export default function LessonPreview({ plan, onChange }: Props) {
                 {stage.tasks.map((task, i) => (
                   <tr key={i}>
                     <td><input className="cell-input" value={task.level} onChange={(e) => setTask(stageKey, i, 'level', e.target.value)} /></td>
-                    <td><AutoTextarea value={task.task} onChange={(v) => setTask(stageKey, i, 'task', v)} /></td>
+                    <td>
+                      <AutoTextarea value={task.task} onChange={(v) => setTask(stageKey, i, 'task', v)} />
+                      {(task.imageHint !== undefined) && (
+                        <div className="image-placeholder">
+                          <span className="image-placeholder-icon" aria-hidden="true">🖼</span>
+                          <input
+                            className="cell-input image-placeholder-input"
+                            value={task.imageHint || ''}
+                            placeholder="Сурет орны — не салу керегін жазыңыз"
+                            onChange={(e) => setTask(stageKey, i, 'imageHint', e.target.value)}
+                          />
+                        </div>
+                      )}
+                      {task.imageHint === undefined && (
+                        <button
+                          type="button"
+                          className="image-placeholder-add"
+                          onClick={() => setTask(stageKey, i, 'imageHint', '')}
+                        >
+                          + Сурет орнын қосу
+                        </button>
+                      )}
+                    </td>
                     {plan.workTypes.includes('Топтық жұмыс') && (
                       <td><AutoTextarea value={task.roles || ''} onChange={(v) => setTask(stageKey, i, 'roles', v)} /></td>
                     )}
@@ -155,6 +177,10 @@ export default function LessonPreview({ plan, onChange }: Props) {
             <td><input className="cell-input" value={plan.studentsCount} onChange={(e) => set('studentsCount', e.target.value)} /></td>
           </tr>
           <tr>
+            <td className="meta-label">Қатыспағандар саны</td>
+            <td colSpan={3}><input className="cell-input" value={plan.absentCount} onChange={(e) => set('absentCount', e.target.value)} placeholder="Сабақ күні толтырылады" /></td>
+          </tr>
+          <tr>
             <td className="meta-label">Сабақтың тақырыбы</td>
             <td colSpan={3}><input className="cell-input" value={plan.topic} onChange={(e) => set('topic', e.target.value)} /></td>
           </tr>
@@ -169,7 +195,29 @@ export default function LessonPreview({ plan, onChange }: Props) {
           </tr>
           <tr>
             <td className="section-label">Сабақ мақсаттары</td>
-            <td><AutoTextarea value={plan.lessonObjectives} onChange={(v) => set('lessonObjectives', v)} /></td>
+            <td className="tiered-objectives">
+              <div className="tier-row">
+                <span className="tier-label">Барлық оқушылар үшін:</span>
+                <AutoTextarea
+                  value={plan.lessonObjectives.all}
+                  onChange={(v) => set('lessonObjectives', { ...plan.lessonObjectives, all: v })}
+                />
+              </div>
+              <div className="tier-row">
+                <span className="tier-label">Көпшілік оқушылар үшін:</span>
+                <AutoTextarea
+                  value={plan.lessonObjectives.most}
+                  onChange={(v) => set('lessonObjectives', { ...plan.lessonObjectives, most: v })}
+                />
+              </div>
+              <div className="tier-row">
+                <span className="tier-label">Кейбір оқушылар үшін:</span>
+                <AutoTextarea
+                  value={plan.lessonObjectives.some}
+                  onChange={(v) => set('lessonObjectives', { ...plan.lessonObjectives, some: v })}
+                />
+              </div>
+            </td>
           </tr>
           <tr>
             <td className="section-label">Бағалау критерийлері</td>

@@ -2,7 +2,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { LessonPlan, LessonStage } from '../types';
 import { computeScoringSummary } from './scoring';
-import { formatStageTasksText, formatStageRolesText } from './planFormat';
+import { formatStageTasksText, formatStageResourcesText, formatTieredObjectives } from './planFormat';
 import { NOTO_SERIF_REGULAR_BASE64, NOTO_SERIF_BOLD_BASE64 } from './pdfFonts';
 
 const FONT = 'NotoSerif';
@@ -55,6 +55,20 @@ function metaTable(doc: jsPDF, plan: LessonPlan, startY: number) {
     tableWidth: w,
     columnStyles: {
       0: { cellWidth: w * 0.22, fontStyle: 'bold', fillColor: HEAD_FILL },
+      1: { cellWidth: w * 0.78 },
+    },
+    body: [['Қатыспағандар саны', plan.absentCount || '—']],
+  });
+
+  const finalY2 = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
+  autoTable(doc, {
+    startY: finalY2,
+    margin: { left: PAGE_MARGIN, right: PAGE_MARGIN },
+    theme: 'grid',
+    styles: { font: FONT, fontSize: 9, cellPadding: 2.2 },
+    tableWidth: w,
+    columnStyles: {
+      0: { cellWidth: w * 0.22, fontStyle: 'bold', fillColor: HEAD_FILL },
       1: { cellWidth: w * 0.78, fontStyle: 'bold' },
     },
     body: [['Сабақтың тақырыбы', plan.topic || '—']],
@@ -95,18 +109,14 @@ function heading(doc: jsPDF, text: string, y: number): number {
 
 function stagesTable(doc: jsPDF, plan: LessonPlan, startY: number) {
   const w = pageWidth(doc);
-  const showRoles = plan.workTypes.includes('Топтық жұмыс');
-  const showSen = plan.specialNeeds;
 
   const cols: { header: string; width: number }[] = [
-    { header: 'Кезең/Уақыты', width: 0.11 },
-    { header: 'Мұғалім әрекеті (сценарий)', width: showRoles ? 0.24 : 0.28 },
-    { header: 'Оқушы әрекеті', width: showRoles ? 0.16 : 0.18 },
-    { header: 'Тапсырма / бағалау', width: showRoles ? 0.17 : 0.21 },
+    { header: 'Кезең/Уақыты', width: 0.1 },
+    { header: 'Мұғалім әрекеті (сценарий)', width: 0.28 },
+    { header: 'Оқушы әрекеті', width: 0.18 },
+    { header: 'Тапсырма / бағалау', width: 0.24 },
+    { header: 'Ресурстар', width: 0.2 },
   ];
-  if (showRoles) cols.push({ header: 'Рөлдер', width: 0.09 });
-  cols.push({ header: 'Ресурстар', width: showSen ? 0.12 : 0.23 });
-  if (showSen) cols.push({ header: 'ЕБҚ бейімделуі', width: 0.11 });
 
   const columnStyles: Record<number, { cellWidth: number; fontStyle?: 'bold' }> = {};
   cols.forEach((c, i) => {
@@ -114,11 +124,13 @@ function stagesTable(doc: jsPDF, plan: LessonPlan, startY: number) {
   });
 
   function stageRow(label: string, stage: LessonStage) {
-    const row = [`${label}\n(${stage.time})`, stage.teacherScript, stage.studentActions, formatStageTasksText(stage)];
-    if (showRoles) row.push(formatStageRolesText(stage));
-    row.push(stage.resources);
-    if (showSen) row.push(stage.specialNeedsNote || '');
-    return row;
+    return [
+      `${label}\n(${stage.time})`,
+      stage.teacherScript,
+      stage.studentActions,
+      formatStageTasksText(stage),
+      formatStageResourcesText(stage),
+    ];
   }
 
   autoTable(doc, {
@@ -218,7 +230,7 @@ export async function exportToPdf(plan: LessonPlan) {
     doc,
     [
       ['Осы сабақта қол жеткізілетін оқу мақсаттары', plan.learningObjectives],
-      ['Сабақ мақсаттары', plan.lessonObjectives],
+      ['Сабақ мақсаттары', formatTieredObjectives(plan.lessonObjectives)],
       ['Бағалау критерийлері', plan.assessmentCriteria],
       ['Тілдік мақсаттар', plan.languageObjectives],
       ['Құндылықтарды дарыту', plan.values],
