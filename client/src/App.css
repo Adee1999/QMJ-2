@@ -1182,3 +1182,74 @@ input.cell-input {
     max-width: 760px;
   }
 }
+
+/* ---------- Жарнама қақпасы (ad-gate) ---------- */
+.ad-gate-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-2);
+  background: rgba(15, 23, 22, 0.55);
+  backdrop-filter: blur(2px);
+  animation: fade-in-up 0.25s ease both;
+}
+
+.ad-gate-modal {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-xl);
+  padding: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  text-align: center;
+}
+
+.ad-gate-title {
+  margin: 0;
+  font-weight: 700;
+  font-size: var(--fs-base);
+  color: var(--text);
+}
+
+.ad-gate-slot {
+  width: 100%;
+  min-height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.ad-gate-continue {
+  width: 100%;
+  justify-content: center;
+}
+
+.ad-gate-continue:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ad-gate-cancel {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  padding: 4px 8px;
+  text-decoration: underline;
+}
+
+.ad-gate-cancel:hover {
+  color: var(--text);
+}

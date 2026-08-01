@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ArrowLeft, FileText, Download, Loader2, AlertCircle } from 'lucide-react';
 import LessonForm from '../components/LessonForm';
 import LessonPreview from '../components/LessonPreview';
+import AdGateModal from '../components/AdGateModal';
 import { generateLessonPlan } from '../api';
 import type { LessonFormInput, LessonPlan } from '../types';
 
@@ -38,6 +39,13 @@ export default function GeneratorPage() {
   const [plan, setPlan] = useState<LessonPlan | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [exporting, setExporting] = useState<'docx' | 'pdf' | null>(null);
+  const [pendingInput, setPendingInput] = useState<LessonFormInput | null>(null);
+  const [showAdGate, setShowAdGate] = useState(false);
+
+  function handleFormSubmit(input: LessonFormInput) {
+    setPendingInput(input);
+    setShowAdGate(true);
+  }
 
   async function handleGenerate(input: LessonFormInput) {
     setView('loading');
@@ -50,6 +58,17 @@ export default function GeneratorPage() {
       setErrorMsg(res.error || 'Белгісіз қате орын алды.');
       setView('error');
     }
+  }
+
+  function handleAdContinue() {
+    setShowAdGate(false);
+    if (pendingInput) handleGenerate(pendingInput);
+    setPendingInput(null);
+  }
+
+  function handleAdCancel() {
+    setShowAdGate(false);
+    setPendingInput(null);
   }
 
   async function handleExport(format: 'docx' | 'pdf') {
@@ -81,9 +100,11 @@ export default function GeneratorPage() {
     <>
       {view !== 'result' && <Hero />}
 
+      {showAdGate && <AdGateModal onContinue={handleAdContinue} onCancel={handleAdCancel} />}
+
       {view === 'form' && (
         <div className="fade-in">
-          <LessonForm onSubmit={handleGenerate} loading={false} />
+          <LessonForm onSubmit={handleFormSubmit} loading={false} />
         </div>
       )}
 
